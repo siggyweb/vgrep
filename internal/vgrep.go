@@ -42,8 +42,12 @@ func (m Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m Model) View() string {
 	view := ""
-	view += fmt.Sprintf("Result: %s \n", m.resultdisplay)
+	view += fmt.Sprintf("Result: %s \n", func() string {
+		if m.err == nil {
+			return m.resultdisplay
+		}
+		return ""
+	}())
 	view += fmt.Sprintf("Current Command Text: %v \n", m.inputBuffer)
-	view += fmt.Sprintf("Error: %s \n")
 	return view
 }

@@ -2,27 +2,27 @@ package vgrep
 
 import (
 	"fmt"
+	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
 // bubbletea application state Model
 type Model struct {
-	resultdisplay string
-	inputBuffer   string
-	err           error
+	result      string
+	inputBuffer textinput.Model
+	err         error
 }
 
 func InitialModel() Model {
 	return Model{
-		// our display is a text box
-		resultdisplay: "",
-		inputBuffer:   "",
-		err:           nil,
+		result:      "",
+		inputBuffer: textinput.New(),
+		err:         nil,
 	}
 }
 
 func (m Model) Init() tea.Cmd {
-	return nil
+	return textinput.Blink
 }
 
 func (m Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
@@ -41,13 +41,12 @@ func (m Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m Model) View() string {
-	view := ""
-	view += fmt.Sprintf("Result: %s \n", func() string {
+	view := fmt.Sprintf("Result: %s \n", func() string {
 		if m.err == nil {
-			return m.resultdisplay
+			return m.result
 		}
 		return ""
 	}())
-	view += fmt.Sprintf("Current Command Text: %v \n", m.inputBuffer)
+	view += m.inputBuffer.View()
 	return view
 }

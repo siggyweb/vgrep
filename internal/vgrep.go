@@ -34,6 +34,17 @@ func (m Model) Init() tea.Cmd {
 func (m Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 
+	switch msg := message.(type) {
+	case tea.KeyMsg:
+
+		switch msg.String() {
+		case "":
+			// do something for my custom message types
+
+		}
+	}
+
+	// the ti bubble has its own mvu loop
 	m.inputBuffer, cmd = m.inputBuffer.Update(message)
 	return m, cmd
 }
@@ -48,3 +59,6 @@ func (m Model) View() string {
 	view += m.inputBuffer.View()
 	return view
 }
+
+// Messages
+type GrepMessage []string

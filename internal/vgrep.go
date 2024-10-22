@@ -14,11 +14,17 @@ type Model struct {
 }
 
 func InitialModel() Model {
-	return Model{
+	ti := textinput.New()
+	ti.Placeholder = "begin searching..."
+	ti.Prompt = ">>"
+	ti.Focus()
+
+	model := Model{
 		result:      "",
-		inputBuffer: textinput.New(),
+		inputBuffer: ti,
 		err:         nil,
 	}
+	return model
 }
 
 func (m Model) Init() tea.Cmd {
@@ -26,18 +32,10 @@ func (m Model) Init() tea.Cmd {
 }
 
 func (m Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
-	switch msg := message.(type) {
+	var cmd tea.Cmd
 
-	case tea.KeyMsg:
-
-		switch msg.String() {
-
-		case "ctrl+c":
-			return m, tea.Quit
-		}
-	}
-
-	return m, nil
+	m.inputBuffer, cmd = m.inputBuffer.Update(message)
+	return m, cmd
 }
 
 func (m Model) View() string {

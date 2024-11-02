@@ -5,6 +5,7 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"golang.design/x/clipboard"
+	"os/exec"
 )
 
 // bubbletea application state model
@@ -50,9 +51,9 @@ func (m Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+q":
 			clipboard.Write(clipboard.FmtText, []byte(m.output))
 
-			// for testing purposes to see key input received
-			//default:
-			//	m.output += msg.String()
+		// for testing purposes to see key input received
+		default:
+			m.output += msg.String()
 		}
 	case GrepMessage:
 		if msg.err == nil {
@@ -79,4 +80,19 @@ func (m Model) View() string {
 type GrepMessage struct {
 	result string // could be []string depending on result?
 	err    error
+}
+
+func (m Model) GrepFetcher() GrepMessage {
+	command := exec.Command(m.inputBuffer.View())
+	output, err := command.Output()
+	if err == nil {
+		return GrepMessage{
+			result: string(output),
+			err:    nil,
+		}
+	}
+	return GrepMessage{
+		result: "",
+		err:    nil,
+	}
 }

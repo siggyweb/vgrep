@@ -7,9 +7,9 @@ import (
 	"golang.design/x/clipboard"
 )
 
-// bubbletea application state Model
+// bubbletea application state model
 type Model struct {
-	result      string // do I need a builder here?
+	output      string // do I need a builder here?
 	inputBuffer textinput.Model
 	err         error
 }
@@ -26,7 +26,7 @@ func InitialModel() Model {
 	}
 
 	model := Model{
-		result:      "",
+		output:      "",
 		inputBuffer: ti,
 		err:         nil,
 	}
@@ -48,11 +48,15 @@ func (m Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 
 		case "ctrl+q":
-			clipboard.Write(clipboard.FmtText, []byte(m.result))
+			clipboard.Write(clipboard.FmtText, []byte(m.output))
 
 			// for testing purposes to see key input received
 			//default:
-			//	m.result += msg.String()
+			//	m.output += msg.String()
+		}
+	case GrepMessage:
+		if msg.err == nil {
+			m.output = msg.result
 		}
 	}
 
@@ -64,7 +68,7 @@ func (m Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 func (m Model) View() string {
 	view := fmt.Sprintf("Result: %s \n", func() string {
 		if m.err == nil {
-			return m.result
+			return m.output
 		}
 		return ""
 	}())

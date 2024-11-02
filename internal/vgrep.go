@@ -4,11 +4,12 @@ import (
 	"fmt"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
+	"golang.design/x/clipboard"
 )
 
 // bubbletea application state Model
 type Model struct {
-	result      string
+	result      string // do I need a builder here?
 	inputBuffer textinput.Model
 	err         error
 }
@@ -18,6 +19,11 @@ func InitialModel() Model {
 	ti.Placeholder = "begin searching..."
 	ti.Prompt = ">>"
 	ti.Focus()
+
+	err := clipboard.Init()
+	if err != nil {
+		panic(err)
+	}
 
 	model := Model{
 		result:      "",
@@ -38,9 +44,15 @@ func (m Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 
 		switch msg.String() {
-		case "":
-			// do something for my custom message types
+		case "ctrl+c":
+			return m, tea.Quit
 
+		case "ctrl+q":
+			clipboard.Write(clipboard.FmtText, []byte(m.result))
+
+			// for testing purposes to see key input received
+			//default:
+			//	m.result += msg.String()
 		}
 	}
 
@@ -60,5 +72,7 @@ func (m Model) View() string {
 	return view
 }
 
-// Messages
-type GrepMessage []string
+type GrepMessage struct {
+	result string // could be []string depending on result?
+	err    error
+}

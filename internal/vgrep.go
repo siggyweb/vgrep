@@ -52,14 +52,9 @@ func (m Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 
 		case "ctrl+q":
 			clipboard.Write(clipboard.FmtText, []byte(m.output))
-
-			// for testing purposes to see key input received
-			//default:
-			//	m.output += msg.String()
 		}
 
 	case TickMsg:
-		//m.output += "tick"
 		return m, tea.Batch(
 			m.GrepFetcher(),
 			tickEvery(),
@@ -92,28 +87,40 @@ func (m Model) View() string {
 	return view
 }
 
-type GrepMessage struct {
-	result string // could be []string depending on result?
-	err    error
-}
-
 func (m Model) GrepFetcher() tea.Cmd {
 	return func() tea.Msg {
-		// remove prompt
-		arguments := strings.Fields(m.inputBuffer.View()[2:])
-		command := exec.Command(arguments[0], arguments[1:]...)
+		// split the raw cmd text into args and handle
+		var command *exec.Cmd
+		arguments := strings.Fields(m.inputBuffer.Value())
+
+		l := len(arguments)
+		switch l {
+		case 0:
+			return nil
+		case 1:
+			command = exec.Command(arguments[0])
+		default:
+			command = exec.Command(arguments[0], arguments[1:]...)
+		}
+
 		output, err := command.Output()
-		if err == nil {
+		if err != nil {
+			return GrepMessage{
+				result: "",
+				err:    err,
+			}
+		} else {
 			return GrepMessage{
 				result: string(output),
 				err:    nil,
 			}
 		}
-		return GrepMessage{
-			result: "",
-			err:    err,
-		}
 	}
+}
+
+type GrepMessage struct {
+	result string // could be []string depending on result? requires testing
+	err    error
 }
 
 type TickMsg time.Time

@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	// fmt.Println("Welcome vgrep")
+	fmt.Println("Welcome to vgrep! The dynamic terminal wrapper")
 	program := tea.NewProgram(vgrep.InitialModel())
 	if _, err := program.Run(); err != nil {
 		fmt.Println(`an error occurred`, err)

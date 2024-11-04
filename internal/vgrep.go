@@ -6,6 +6,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"golang.design/x/clipboard"
 	"os/exec"
+	"strings"
 	"time"
 )
 
@@ -98,8 +99,9 @@ type GrepMessage struct {
 
 func (m Model) GrepFetcher() tea.Cmd {
 	return func() tea.Msg {
-		// ignore the prompt
-		command := exec.Command(m.inputBuffer.View()[2:])
+		// remove prompt
+		arguments := strings.Fields(m.inputBuffer.View()[2:])
+		command := exec.Command(arguments[0], arguments[1:]...)
 		output, err := command.Output()
 		if err == nil {
 			return GrepMessage{

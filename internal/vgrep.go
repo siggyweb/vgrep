@@ -70,8 +70,13 @@ func (m Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 
-	// the ti bubble has its own mvu loop
+	// the ti bubble has its own mvu loop, reset when user deletes all input
 	m.inputBuffer, cmd = m.inputBuffer.Update(message)
+	if len(m.inputBuffer.Value()) == 0 {
+		m.output = ""
+		m.err = nil
+	}
+
 	return m, cmd
 }
 
@@ -126,7 +131,7 @@ type GrepMessage struct {
 type TickMsg time.Time
 
 func tickEvery() tea.Cmd {
-	return tea.Every(time.Second, func(t time.Time) tea.Msg {
+	return tea.Every(time.Millisecond*500, func(t time.Time) tea.Msg {
 		return TickMsg(t)
 	})
 }

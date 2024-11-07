@@ -13,9 +13,10 @@ import (
 
 // bubbletea application state model
 type Model struct {
-	output      string // do I need a builder here?
-	inputBuffer textinput.Model
-	err         error
+	output           string // do I need a builder here?
+	inputBuffer      textinput.Model
+	err              error
+	currentDirectory string
 }
 
 func InitialModel() Model {
@@ -134,7 +135,7 @@ func (m Model) CommandFetcher() tea.Cmd {
 }
 
 type GrepMessage struct {
-	result string // could be []string depending on result? requires testing
+	result string // could be []string depending on how result is composed? requires testing
 	err    error
 }
 

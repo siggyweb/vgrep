@@ -1,6 +1,7 @@
 package vgrep
 
 import (
+	"context"
 	"fmt"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
@@ -56,7 +57,7 @@ func (m Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 
 	case TickMsg:
 		return m, tea.Batch(
-			m.GrepFetcher(),
+			m.CommandFetcher(),
 			tickEvery(),
 		)
 
@@ -81,6 +82,7 @@ func (m Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m Model) View() string {
+	// todo split input based on \n and wrap lines.
 	view := fmt.Sprintf("Result: %s \n", m.output)
 	view += fmt.Sprintf("Error: %s \n", func() string {
 		if m.err != nil {
@@ -92,21 +94,29 @@ func (m Model) View() string {
 	return view
 }
 
-func (m Model) GrepFetcher() tea.Cmd {
-	return func() tea.Msg {
-		// split the raw cmd text into args and handle
-		var command *exec.Cmd
-		arguments := strings.Fields(m.inputBuffer.Value())
+func (m Model) CommandCreator() *exec.Cmd {
+	// split the raw cmd text from the users input into args and form an executable command
+	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*200)
+	defer cancel()
+	arguments := strings.Fields(m.inputBuffer.Value())
+	var command *exec.Cmd
 
-		l := len(arguments)
-		switch l {
-		case 0:
-			return nil
-		case 1:
-			command = exec.Command(arguments[0])
-		default:
-			command = exec.Command(arguments[0], arguments[1:]...)
-		}
+	l := len(arguments)
+	switch l {
+	case 0:
+		return nil
+	case 1:
+		command = exec.CommandContext(ctx, arguments[0])
+	default:
+		command = exec.CommandContext(ctx, arguments[0], arguments[1:]...)
+	}
+
+	return command
+}
+
+func (m Model) CommandFetcher() tea.Cmd {
+	return func() tea.Msg {
+		command := m.CommandCreator()
 
 		output, err := command.Output()
 		if err != nil {

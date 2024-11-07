@@ -6,7 +6,9 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"golang.design/x/clipboard"
+	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"time"
 )
@@ -20,12 +22,19 @@ type Model struct {
 }
 
 func InitialModel() Model {
+	workingDirectory, err := FetchWorkingDirectory()
+	if err != nil {
+		fmt.Println("could not obtain current working directory, quitting")
+		tea.Quit()
+	}
+	workingDirectory = filepath.Base(workingDirectory)
+
 	ti := textinput.New()
 	ti.Placeholder = "begin searching..."
-	ti.Prompt = ">>"
+	ti.Prompt = workingDirectory + ">>"
 	ti.Focus()
 
-	err := clipboard.Init()
+	err = clipboard.Init()
 	if err != nil {
 		panic(err)
 	}
@@ -44,7 +53,6 @@ func (m Model) Init() tea.Cmd {
 
 func (m Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
-
 	switch msg := message.(type) {
 	case tea.KeyMsg:
 
@@ -118,6 +126,9 @@ func (m Model) CommandCreator() *exec.Cmd {
 func (m Model) CommandFetcher() tea.Cmd {
 	return func() tea.Msg {
 		command := m.CommandCreator()
+		if command == nil {
+			return nil
+		}
 
 		output, err := command.Output()
 		if err != nil {
@@ -132,6 +143,15 @@ func (m Model) CommandFetcher() tea.Cmd {
 			}
 		}
 	}
+}
+
+func FetchWorkingDirectory() (string, error) {
+	output, err := os.Getwd()
+	if err != nil {
+		return "", err
+	}
+	result := strings.TrimSpace(string(output))
+	return result, nil
 }
 
 type GrepMessage struct {

@@ -4,7 +4,7 @@ application that dynamically renders the results of commands in the shell, allow
 commands that are complex or need to be used repetitively.
 
 The intention behind vgrep is to make search based commands more visual, adding a feedback layer to the shell while
-protecting against commands which could damage system state.
+protecting against commands which could damage system state. Grep was chosen for the name as this is what I use it for most :)
 
 # # Shortcuts
 - "ctrl+c" exit the vgrep dynamic terminal.

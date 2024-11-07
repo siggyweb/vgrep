@@ -6,25 +6,35 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"golang.design/x/clipboard"
+	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"time"
 )
 
 // bubbletea application state model
 type Model struct {
-	output      string // do I need a builder here?
-	inputBuffer textinput.Model
-	err         error
+	output           string // do I need a builder here?
+	inputBuffer      textinput.Model
+	err              error
+	currentDirectory string
 }
 
 func InitialModel() Model {
+	workingDirectory, err := FetchWorkingDirectory()
+	if err != nil {
+		fmt.Println("could not obtain current working directory, quitting")
+		tea.Quit()
+	}
+	workingDirectory = filepath.Base(workingDirectory)
+
 	ti := textinput.New()
 	ti.Placeholder = "begin searching..."
-	ti.Prompt = ">>"
+	ti.Prompt = workingDirectory + ">>"
 	ti.Focus()
 
-	err := clipboard.Init()
+	err = clipboard.Init()
 	if err != nil {
 		panic(err)
 	}
@@ -43,7 +53,6 @@ func (m Model) Init() tea.Cmd {
 
 func (m Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
-
 	switch msg := message.(type) {
 	case tea.KeyMsg:
 
@@ -57,7 +66,7 @@ func (m Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 
 	case TickMsg:
 		return m, tea.Batch(
-			m.CommandFetcher(),
+			m.CommandRunner(),
 			tickEvery(),
 		)
 
@@ -94,29 +103,35 @@ func (m Model) View() string {
 	return view
 }
 
-func (m Model) CommandCreator() *exec.Cmd {
+func (m Model) CommandCreator() (*exec.Cmd, context.CancelFunc) {
 	// split the raw cmd text from the users input into args and form an executable command
 	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*200)
-	defer cancel()
 	arguments := strings.Fields(m.inputBuffer.Value())
 	var command *exec.Cmd
 
 	l := len(arguments)
 	switch l {
 	case 0:
-		return nil
+		cancel()
+		return nil, nil
 	case 1:
 		command = exec.CommandContext(ctx, arguments[0])
 	default:
 		command = exec.CommandContext(ctx, arguments[0], arguments[1:]...)
 	}
 
-	return command
+	return command, cancel
 }
 
-func (m Model) CommandFetcher() tea.Cmd {
+func (m Model) CommandRunner() tea.Cmd {
 	return func() tea.Msg {
-		command := m.CommandCreator()
+		command, cancel := m.CommandCreator()
+		// if command is invalid abandon here as we cannot call cancel()
+		if command == nil {
+			return nil
+		}
+		// else set up the command with cancellation token and execute
+		defer cancel()
 
 		output, err := command.Output()
 		if err != nil {
@@ -133,8 +148,17 @@ func (m Model) CommandFetcher() tea.Cmd {
 	}
 }
 
+func FetchWorkingDirectory() (string, error) {
+	output, err := os.Getwd()
+	if err != nil {
+		return "", err
+	}
+	result := strings.TrimSpace(output)
+	return result, nil
+}
+
 type GrepMessage struct {
-	result string // could be []string depending on result? requires testing
+	result string // could be []string depending on how result is composed? requires testing
 	err    error
 }
 

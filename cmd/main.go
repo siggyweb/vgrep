@@ -11,7 +11,7 @@ func main() {
 	fmt.Println("Welcome to vgrep! The dynamic terminal wrapper")
 	program := tea.NewProgram(vgrep.InitialModel())
 	if _, err := program.Run(); err != nil {
-		fmt.Println(`an error occurred`, err)
+		fmt.Println(`an error occurred, exiting...`, err)
 		os.Exit(1)
 	}
 }

@@ -21,6 +21,7 @@ type Model struct {
 	currentDirectory string
 }
 
+// Initial state for the event loop
 func InitialModel() Model {
 	workingDirectory, err := FetchWorkingDirectory()
 	if err != nil {
@@ -47,10 +48,12 @@ func InitialModel() Model {
 	return model
 }
 
+// Init kicks off the event loop
 func (m Model) Init() tea.Cmd {
-	return tickEvery()
+	return tea.Batch(tickEvery(), m.inputBuffer.Focus())
 }
 
+// Update handles the changes of state for the model
 func (m Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	switch msg := message.(type) {
@@ -70,7 +73,7 @@ func (m Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 			tickEvery(),
 		)
 
-	case GrepMessage:
+	case CommandResponseMessage:
 		if msg.err == nil {
 			m.output = msg.result
 			m.err = nil
@@ -90,6 +93,7 @@ func (m Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 	return m, cmd
 }
 
+// View creates the TUI representation
 func (m Model) View() string {
 	// todo split input based on \n and wrap lines.
 	view := fmt.Sprintf("Result: %s \n", m.output)
@@ -103,6 +107,7 @@ func (m Model) View() string {
 	return view
 }
 
+// CommandCreator forms shell commands to be executed async
 func (m Model) CommandCreator() (*exec.Cmd, context.CancelFunc) {
 	// split the raw cmd text from the users input into args and form an executable command
 	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*200)
@@ -123,6 +128,7 @@ func (m Model) CommandCreator() (*exec.Cmd, context.CancelFunc) {
 	return command, cancel
 }
 
+// CommandRunner executes shell commands in a goroutine using tea Cmd capability and routes the results back into the event loop
 func (m Model) CommandRunner() tea.Cmd {
 	return func() tea.Msg {
 		command, cancel := m.CommandCreator()
@@ -135,12 +141,12 @@ func (m Model) CommandRunner() tea.Cmd {
 
 		output, err := command.Output()
 		if err != nil {
-			return GrepMessage{
+			return CommandResponseMessage{
 				result: "",
 				err:    err,
 			}
 		} else {
-			return GrepMessage{
+			return CommandResponseMessage{
 				result: string(output),
 				err:    nil,
 			}
@@ -148,6 +154,7 @@ func (m Model) CommandRunner() tea.Cmd {
 	}
 }
 
+// Retrieves and formats the full path to the current working directory
 func FetchWorkingDirectory() (string, error) {
 	output, err := os.Getwd()
 	if err != nil {
@@ -157,15 +164,21 @@ func FetchWorkingDirectory() (string, error) {
 	return result, nil
 }
 
-type GrepMessage struct {
-	result string // could be []string depending on how result is composed? requires testing
-	err    error
-}
-
-type TickMsg time.Time
-
+// tickEvery is the driver for the refresh rate of results in the view
 func tickEvery() tea.Cmd {
 	return tea.Every(time.Millisecond*500, func(t time.Time) tea.Msg {
 		return TickMsg(t)
 	})
 }
+
+// --------------------------------------------------------------------------------------------------------------------
+// MESSAGES
+
+// Message is the representation of a shell command that has been executed successfully or otherwise
+type CommandResponseMessage struct {
+	result string // could be []string depending on how result is composed? requires testing
+	err    error
+}
+
+// TickMsg is used as a token to trigger running shell commands async which feed back into the view
+type TickMsg time.Time

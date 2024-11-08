@@ -13,16 +13,16 @@ import (
 	"time"
 )
 
-// bubbletea application state model
-type Model struct {
+// ShellModel implements bubble tea application state model for terminal
+type ShellModel struct {
 	output           string // do I need a builder here?
 	inputBuffer      textinput.Model
 	err              error
 	currentDirectory string
 }
 
-// Initial state for the event loop
-func InitialModel() Model {
+// InitialModel creates the starting state for the event loop
+func InitialModel() ShellModel {
 	workingDirectory, err := FetchWorkingDirectory()
 	if err != nil {
 		fmt.Println("could not obtain current working directory, quitting")
@@ -40,7 +40,7 @@ func InitialModel() Model {
 		panic(err)
 	}
 
-	model := Model{
+	model := ShellModel{
 		output:      "",
 		inputBuffer: ti,
 		err:         nil,
@@ -49,12 +49,12 @@ func InitialModel() Model {
 }
 
 // Init kicks off the event loop
-func (m Model) Init() tea.Cmd {
+func (m ShellModel) Init() tea.Cmd {
 	return tea.Batch(tickEvery(), m.inputBuffer.Focus())
 }
 
 // Update handles the changes of state for the model
-func (m Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
+func (m ShellModel) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	switch msg := message.(type) {
 	case tea.KeyMsg:
@@ -94,7 +94,7 @@ func (m Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 // View creates the TUI representation
-func (m Model) View() string {
+func (m ShellModel) View() string {
 	// todo split input based on \n and wrap lines.
 	view := fmt.Sprintf("Result: %s \n", m.output)
 	view += fmt.Sprintf("Error: %s \n", func() string {
@@ -108,7 +108,7 @@ func (m Model) View() string {
 }
 
 // CommandCreator forms shell commands to be executed async
-func (m Model) CommandCreator() (*exec.Cmd, context.CancelFunc) {
+func (m ShellModel) CommandCreator() (*exec.Cmd, context.CancelFunc) {
 	// split the raw cmd text from the users input into args and form an executable command
 	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*200)
 	arguments := strings.Fields(m.inputBuffer.Value())
@@ -129,7 +129,7 @@ func (m Model) CommandCreator() (*exec.Cmd, context.CancelFunc) {
 }
 
 // CommandRunner executes shell commands in a goroutine using tea Cmd capability and routes the results back into the event loop
-func (m Model) CommandRunner() tea.Cmd {
+func (m ShellModel) CommandRunner() tea.Cmd {
 	return func() tea.Msg {
 		command, cancel := m.CommandCreator()
 		// if command is invalid abandon here as we cannot call cancel()
@@ -154,7 +154,7 @@ func (m Model) CommandRunner() tea.Cmd {
 	}
 }
 
-// Retrieves and formats the full path to the current working directory
+// FetchWorkingDirectory Retrieves and formats the full path to the current working directory
 func FetchWorkingDirectory() (string, error) {
 	output, err := os.Getwd()
 	if err != nil {

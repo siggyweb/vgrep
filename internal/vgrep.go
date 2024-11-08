@@ -13,12 +13,13 @@ import (
 	"time"
 )
 
-// ShellModel implements bubble tea application state model for terminal
+// ShellModel represents the dynamic layer above the terminal which handles the interaction with the system shell below
+// it implements the bubble tea application state model for terminal
 type ShellModel struct {
-	output           string // do I need a builder here?
-	inputBuffer      textinput.Model
-	err              error
 	currentDirectory string
+	err              error
+	inputBuffer      textinput.Model
+	output           string // do I need a builder here?
 }
 
 // InitialModel creates the starting state for the event loop
@@ -41,9 +42,10 @@ func InitialModel() ShellModel {
 	}
 
 	model := ShellModel{
-		output:      "",
-		inputBuffer: ti,
-		err:         nil,
+		currentDirectory: workingDirectory,
+		output:           "",
+		inputBuffer:      ti,
+		err:              nil,
 	}
 	return model
 }

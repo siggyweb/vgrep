@@ -1,10 +1,11 @@
-package vgrep
+package tui
 
 import (
 	"context"
 	"fmt"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
+	log "github.com/sirupsen/logrus"
 	"golang.design/x/clipboard"
 	"os"
 	"os/exec"
@@ -60,7 +61,7 @@ func (m ShellModel) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	switch msg := message.(type) {
 	case tea.KeyMsg:
-
+		log.Debug(msg)
 		switch msg.String() {
 		case "ctrl+c":
 			return m, tea.Quit

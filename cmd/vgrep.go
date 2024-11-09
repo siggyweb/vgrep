@@ -12,10 +12,10 @@ func main() {
 	//goland:noinspection ALL
 	fmt.Println("Welcome to vgrep! The dynamic terminal wrapper")
 
-	file := logging.ConfigureLogging()
-	defer file()
+	logger, cleanUp := logging.ConfigureLogging()
+	defer cleanUp()
 
-	program := tea.NewProgram(vgrep.InitialModel())
+	program := tea.NewProgram(vgrep.InitialModel(logger))
 	if _, err := program.Run(); err != nil {
 		fmt.Println(`an error occurred, exiting...`, err)
 		os.Exit(1)

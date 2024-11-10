@@ -6,6 +6,6 @@ commands that are complex or need to be used repetitively.
 The intention behind vgrep is to make search based commands more visual, adding a feedback layer to the shell while
 protecting against commands which could damage system state. Grep was chosen for the name as this is what I use it for most :)
 
-# # Shortcuts
+## Shortcuts
 - "ctrl+c" exit the vgrep dynamic terminal.
 - "ctrl+q" copy the results from the view directly to the clipboard.

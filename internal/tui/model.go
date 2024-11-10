@@ -6,7 +6,9 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	log "github.com/sirupsen/logrus"
 	"golang.design/x/clipboard"
+	"os"
 	"path/filepath"
+	"strings"
 )
 
 // ShellModel represents the dynamic layer above the terminal which handles the interaction with the system shell below
@@ -53,4 +55,14 @@ func InitialModel(logger *log.Logger) ShellModel {
 // Init kicks off the event loop
 func (m ShellModel) Init() tea.Cmd {
 	return tea.Batch(tickEvery(), m.inputBuffer.Focus())
+}
+
+// FetchWorkingDirectory Retrieves and formats the full path to the current working directory
+func FetchWorkingDirectory() (string, error) {
+	output, err := os.Getwd()
+	if err != nil {
+		return "", err
+	}
+	result := strings.TrimSpace(output)
+	return result, nil
 }

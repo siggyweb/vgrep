@@ -2,10 +2,8 @@ package tui
 
 import (
 	"context"
-	"fmt"
 	tea "github.com/charmbracelet/bubbletea"
 	"golang.design/x/clipboard"
-	"os"
 	"os/exec"
 	"reflect"
 	"strings"
@@ -56,20 +54,6 @@ func (m ShellModel) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 	return m, cmd
 }
 
-// View creates the TUI representation
-func (m ShellModel) View() string {
-	// todo split input based on \n and wrap lines.
-	view := fmt.Sprintf("Result: %s \n", m.output)
-	view += fmt.Sprintf("Error: %s \n", func() string {
-		if m.err != nil {
-			return m.err.Error()
-		}
-		return ""
-	}())
-	view += m.inputBuffer.View()
-	return view
-}
-
 // CommandCreator forms shell commands to be executed async
 func (m ShellModel) CommandCreator() (*exec.Cmd, context.CancelFunc) {
 	// split the raw cmd text from the users input into args and form an executable command
@@ -115,16 +99,6 @@ func (m ShellModel) CommandRunner() tea.Cmd {
 			}
 		}
 	}
-}
-
-// FetchWorkingDirectory Retrieves and formats the full path to the current working directory
-func FetchWorkingDirectory() (string, error) {
-	output, err := os.Getwd()
-	if err != nil {
-		return "", err
-	}
-	result := strings.TrimSpace(output)
-	return result, nil
 }
 
 // tickEvery is the driver for the refresh rate of results in the view

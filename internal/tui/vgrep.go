@@ -1,14 +1,16 @@
-package vgrep
+package tui
 
 import (
 	"context"
 	"fmt"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
+	log "github.com/sirupsen/logrus"
 	"golang.design/x/clipboard"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"time"
 )
@@ -20,10 +22,11 @@ type ShellModel struct {
 	err              error
 	inputBuffer      textinput.Model
 	output           string // do I need a builder here?
+	logger           *log.Logger
 }
 
 // InitialModel creates the starting state for the event loop
-func InitialModel() ShellModel {
+func InitialModel(logger *log.Logger) ShellModel {
 	workingDirectory, err := FetchWorkingDirectory()
 	if err != nil {
 		fmt.Println("could not obtain current working directory, quitting")
@@ -46,7 +49,10 @@ func InitialModel() ShellModel {
 		output:           "",
 		inputBuffer:      ti,
 		err:              nil,
+		logger:           logger,
 	}
+	logger.Debugln("TUI state initialised")
+
 	return model
 }
 
@@ -57,10 +63,13 @@ func (m ShellModel) Init() tea.Cmd {
 
 // Update handles the changes of state for the model
 func (m ShellModel) Update(message tea.Msg) (tea.Model, tea.Cmd) {
-	var cmd tea.Cmd
+	msgType := reflect.TypeOf(message)
+	if msgType != reflect.TypeOf(TickMsg{}) {
+		m.logger.Debugf("handling message, type: %s , message: %s", msgType, message)
+	}
+
 	switch msg := message.(type) {
 	case tea.KeyMsg:
-
 		switch msg.String() {
 		case "ctrl+c":
 			return m, tea.Quit
@@ -85,7 +94,8 @@ func (m ShellModel) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 
-	// the ti bubble has its own mvu loop, reset when user deletes all input
+	// manage the state of the ti bubble via its own mvu event loop
+	var cmd tea.Cmd
 	m.inputBuffer, cmd = m.inputBuffer.Update(message)
 	if len(m.inputBuffer.Value()) == 0 {
 		m.output = ""

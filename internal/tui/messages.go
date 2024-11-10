@@ -1,4 +1,4 @@
-package vgrep
+package tui
 
 import "time"
 

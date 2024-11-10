@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"time"
 )
@@ -62,7 +63,11 @@ func (m ShellModel) Init() tea.Cmd {
 
 // Update handles the changes of state for the model
 func (m ShellModel) Update(message tea.Msg) (tea.Model, tea.Cmd) {
-	m.logger.Debugf("handling message, type: %s ", message) // needs reformatting
+	msgType := reflect.TypeOf(message)
+	if msgType != reflect.TypeOf(TickMsg{}) {
+		m.logger.Debugf("handling message, type: %s , message: %s", msgType, message)
+	}
+
 	switch msg := message.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {

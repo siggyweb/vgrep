@@ -9,7 +9,6 @@ import (
 )
 
 func main() {
-	//goland:noinspection ALL
 	fmt.Println("Welcome to vgrep! The dynamic terminal wrapper")
 
 	logger, cleanUp := logging.ConfigureLogging()

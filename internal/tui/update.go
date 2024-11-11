@@ -57,7 +57,7 @@ func (m ShellModel) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 // CommandCreator forms shell commands to be executed async
 func (m ShellModel) CommandCreator() (*exec.Cmd, context.CancelFunc) {
 	// split the raw cmd text from the users input into args and form an executable command
-	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*200)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*500)
 	arguments := strings.Fields(m.inputBuffer.Value())
 	var command *exec.Cmd
 

@@ -15,3 +15,5 @@ func (m ShellModel) View() string {
 	view += m.inputBuffer.View()
 	return view
 }
+
+// todo function for error message formatting

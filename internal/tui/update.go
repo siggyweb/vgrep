@@ -59,8 +59,8 @@ func (m ShellModel) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 	return m, cmd
 }
 
+// CommandCreator constructs terminal commands from users input with safety checks
 func (m ShellModel) CommandCreator() (*exec.Cmd, context.CancelFunc) {
-	// split the raw cmd text from the users input, first element is the executable
 	arguments := strings.Fields(m.inputBuffer.Value())
 	l := len(arguments)
 	if l == 0 {
@@ -84,6 +84,7 @@ func (m ShellModel) CommandCreator() (*exec.Cmd, context.CancelFunc) {
 	return command, cancel
 }
 
+// ValidateCommand provides a whitelist of commands which are safe to be run within the event loop
 func validateCommand(executable string) bool {
 	safeCommands := []string{"pwd", "ls", "grep", "find", "locate", "which", "awk"}
 	for _, cmd := range safeCommands {

@@ -18,6 +18,11 @@ func (m ShellModel) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 	}
 
 	switch msg := message.(type) {
+
+	case tea.WindowSizeMsg:
+		m.height = msg.Height
+		m.width = msg.Width
+
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "ctrl+c":
@@ -43,7 +48,7 @@ func (m ShellModel) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 
-	// manage the state of the ti bubble via its own mvu event loop
+	// finally manage the state of the ti bubble via its own mvu event loop
 	var cmd tea.Cmd
 	m.inputBuffer, cmd = m.inputBuffer.Update(message)
 	if len(m.inputBuffer.Value()) == 0 {

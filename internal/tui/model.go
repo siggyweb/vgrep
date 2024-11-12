@@ -17,8 +17,10 @@ type ShellModel struct {
 	currentDirectory string
 	err              error
 	inputBuffer      textinput.Model
-	output           string // do I need a builder here?
 	logger           *log.Logger
+	output           string // do I need a builder here?
+	height           int
+	width            int
 }
 
 // InitialModel creates the starting state for the event loop

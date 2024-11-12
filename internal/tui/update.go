@@ -59,18 +59,22 @@ func (m ShellModel) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 	return m, cmd
 }
 
-// CommandCreator forms shell commands to be executed async
 func (m ShellModel) CommandCreator() (*exec.Cmd, context.CancelFunc) {
-	// split the raw cmd text from the users input into args and form an executable command
-	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*500)
+	// split the raw cmd text from the users input, first element is the executable
 	arguments := strings.Fields(m.inputBuffer.Value())
-	var command *exec.Cmd
-
 	l := len(arguments)
-	switch l {
-	case 0:
-		cancel()
+	if l == 0 {
 		return nil, nil
+	}
+
+	var command *exec.Cmd
+	valid := validateCommand(arguments[0])
+	if !valid {
+		return nil, nil
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*500)
+	switch l {
 	case 1:
 		command = exec.CommandContext(ctx, arguments[0])
 	default:
@@ -78,6 +82,16 @@ func (m ShellModel) CommandCreator() (*exec.Cmd, context.CancelFunc) {
 	}
 
 	return command, cancel
+}
+
+func validateCommand(executable string) bool {
+	safeCommands := []string{"pwd", "ls", "grep", "find", "locate", "which", "awk"}
+	for _, cmd := range safeCommands {
+		if executable == cmd {
+			return true
+		}
+	}
+	return false
 }
 
 // CommandRunner executes shell commands in a goroutine using tea Cmd capability and routes the results back into the event loop

@@ -14,7 +14,7 @@ import (
 func (m ShellModel) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 	msgType := reflect.TypeOf(message)
 	if msgType != reflect.TypeOf(TickMsg{}) {
-		m.logger.Debugf("handling message, type: %s , message: %s", msgType, message)
+		m.logger.Debugf("handling message, type: %s , message: %+v", msgType, message)
 	}
 
 	switch msg := message.(type) {

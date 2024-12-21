@@ -3,6 +3,8 @@ package tui
 import "fmt"
 
 // View creates the TUI representation
+//
+//goland:noinspection GoMixedReceiverTypes
 func (m ShellModel) View() string {
 	// todo wrap lines + apply styling
 	view := fmt.Sprintf("Result: %s \n", m.output)

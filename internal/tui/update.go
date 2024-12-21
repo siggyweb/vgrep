@@ -5,54 +5,59 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"golang.design/x/clipboard"
 	"os/exec"
+	"reflect"
 	"strings"
 	"time"
 )
 
-const DebounceDuration = time.Millisecond * 500
+const DebounceDuration = time.Second
 
-// Update handles the changes of state for the model
+// Update handles core routing for messages flowing through the MVU pipeline
+//
+//goland:noinspection GoMixedReceiverTypes
 func (m ShellModel) Update(message tea.Msg) (tea.Model, tea.Cmd) {
+	m.logger.Debugf("handling message of type: %s,  message: %+v", reflect.TypeOf(message), message)
+	var messageCommand tea.Cmd
+
 	switch msg := message.(type) {
 	case tea.WindowSizeMsg:
 		m.HandleWindowSizeMsg(msg)
 	case tea.KeyMsg:
-		return m.HandleKeyMessage(msg)
+		messageCommand = m.HandleKeyMessage(msg)
 	case TickMsg:
 		if int(msg) == m.debounceTag {
-			return m, m.CommandRunner()
+			messageCommand = m.CommandRunner()
 		}
 	case CommandResponseMessage:
 		m.HandleCommandResponseMessage(msg)
 	}
 
-	// This stuff still needs to happen!!
-	// finally manage the state of the ti bubble via its own mvu event loop
-	var cmd tea.Cmd
-	m.inputBuffer, cmd = m.inputBuffer.Update(message)
+	// Manage the state of the ti bubble via its own mvu event loop
+	var inputBufferCmd tea.Cmd
+	m.inputBuffer, inputBufferCmd = m.inputBuffer.Update(message)
 	if len(m.inputBuffer.Value()) == 0 {
 		m.output = ""
 		m.err = nil
 	}
 
-	return m, cmd
+	return m, tea.Batch(messageCommand, inputBufferCmd)
 }
 
-func (m ShellModel) HandleKeyMessage(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+func (m *ShellModel) HandleKeyMessage(msg tea.KeyMsg) tea.Cmd {
 	m.debounceTag++
 	switch msg.String() {
 	case "ctrl+c":
-		return m, tea.Quit
+		return tea.Quit
 
 	case "ctrl+q":
 		clipboard.Write(clipboard.FmtText, []byte(m.output))
 	}
-	return m, tea.Tick(DebounceDuration, func(_ time.Time) tea.Msg {
+	return tea.Tick(DebounceDuration, func(_ time.Time) tea.Msg {
 		return TickMsg(m.debounceTag)
 	})
 }
 
-func (m ShellModel) HandleCommandResponseMessage(msg CommandResponseMessage) {
+func (m *ShellModel) HandleCommandResponseMessage(msg CommandResponseMessage) {
 	if msg.err == nil {
 		m.output = msg.result
 		m.err = nil
@@ -62,13 +67,13 @@ func (m ShellModel) HandleCommandResponseMessage(msg CommandResponseMessage) {
 	}
 }
 
-func (m ShellModel) HandleWindowSizeMsg(msg tea.WindowSizeMsg) {
+func (m *ShellModel) HandleWindowSizeMsg(msg tea.WindowSizeMsg) {
 	m.height = msg.Height
 	m.width = msg.Width
 }
 
 // CommandCreator constructs terminal commands from users input with safety checks
-func (m ShellModel) CommandCreator() (*exec.Cmd, context.CancelFunc) {
+func (m *ShellModel) CommandCreator() (*exec.Cmd, context.CancelFunc) {
 	arguments := strings.Fields(m.inputBuffer.Value())
 	l := len(arguments)
 	if l == 0 {
@@ -104,7 +109,7 @@ func validateCommand(executable string) bool {
 }
 
 // CommandRunner executes shell commands in a goroutine using tea Cmd capability and routes the results back into the event loop
-func (m ShellModel) CommandRunner() tea.Cmd {
+func (m *ShellModel) CommandRunner() tea.Cmd {
 	return func() tea.Msg {
 		command, cancel := m.CommandCreator()
 		// if command is invalid abandon here as we cannot call cancel()

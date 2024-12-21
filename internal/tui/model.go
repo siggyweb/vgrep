@@ -56,6 +56,8 @@ func InitialModel(logger *log.Logger) ShellModel {
 }
 
 // Init kicks off the event loop
+//
+//goland:noinspection GoMixedReceiverTypes
 func (m ShellModel) Init() tea.Cmd {
 	return m.inputBuffer.Focus()
 }

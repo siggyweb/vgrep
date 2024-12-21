@@ -21,6 +21,7 @@ type ShellModel struct {
 	output           string // do I need a builder here?
 	height           int
 	width            int
+	debounceTag      int
 }
 
 // InitialModel creates the starting state for the event loop
@@ -56,7 +57,7 @@ func InitialModel(logger *log.Logger) ShellModel {
 
 // Init kicks off the event loop
 func (m ShellModel) Init() tea.Cmd {
-	return tea.Batch(tickEvery(), m.inputBuffer.Focus())
+	return m.inputBuffer.Focus()
 }
 
 // FetchWorkingDirectory Retrieves and formats the full path to the current working directory

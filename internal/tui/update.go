@@ -5,49 +5,28 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"golang.design/x/clipboard"
 	"os/exec"
-	"reflect"
 	"strings"
 	"time"
 )
 
+const DebounceDuration = time.Millisecond * 500
+
 // Update handles the changes of state for the model
 func (m ShellModel) Update(message tea.Msg) (tea.Model, tea.Cmd) {
-	msgType := reflect.TypeOf(message)
-	if msgType != reflect.TypeOf(TickMsg{}) {
-		m.logger.Debugf("handling message, type: %s , message: %+v", msgType, message)
-	}
-
 	switch msg := message.(type) {
-
 	case tea.WindowSizeMsg:
-		m.height = msg.Height
-		m.width = msg.Width
-
+		m.HandleWindowSizeMsg(msg)
 	case tea.KeyMsg:
-		switch msg.String() {
-		case "ctrl+c":
-			return m, tea.Quit
-
-		case "ctrl+q":
-			clipboard.Write(clipboard.FmtText, []byte(m.output))
-		}
-
+		return m.HandleKeyMessage(msg)
 	case TickMsg:
-		return m, tea.Batch(
-			m.CommandRunner(),
-			tickEvery(),
-		)
-
-	case CommandResponseMessage:
-		if msg.err == nil {
-			m.output = msg.result
-			m.err = nil
-		} else {
-			m.output = ""
-			m.err = msg.err
+		if int(msg) == m.debounceTag {
+			return m, m.CommandRunner()
 		}
+	case CommandResponseMessage:
+		m.HandleCommandResponseMessage(msg)
 	}
 
+	// This stuff still needs to happen!!
 	// finally manage the state of the ti bubble via its own mvu event loop
 	var cmd tea.Cmd
 	m.inputBuffer, cmd = m.inputBuffer.Update(message)
@@ -57,6 +36,35 @@ func (m ShellModel) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 	}
 
 	return m, cmd
+}
+
+func (m ShellModel) HandleKeyMessage(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	m.debounceTag++
+	switch msg.String() {
+	case "ctrl+c":
+		return m, tea.Quit
+
+	case "ctrl+q":
+		clipboard.Write(clipboard.FmtText, []byte(m.output))
+	}
+	return m, tea.Tick(DebounceDuration, func(_ time.Time) tea.Msg {
+		return TickMsg(m.debounceTag)
+	})
+}
+
+func (m ShellModel) HandleCommandResponseMessage(msg CommandResponseMessage) {
+	if msg.err == nil {
+		m.output = msg.result
+		m.err = nil
+	} else {
+		m.output = ""
+		m.err = msg.err
+	}
+}
+
+func (m ShellModel) HandleWindowSizeMsg(msg tea.WindowSizeMsg) {
+	m.height = msg.Height
+	m.width = msg.Width
 }
 
 // CommandCreator constructs terminal commands from users input with safety checks
@@ -119,11 +127,4 @@ func (m ShellModel) CommandRunner() tea.Cmd {
 			}
 		}
 	}
-}
-
-// tickEvery is the driver for the refresh rate of results in the view
-func tickEvery() tea.Cmd {
-	return tea.Every(time.Millisecond*500, func(t time.Time) tea.Msg {
-		return TickMsg(t)
-	})
 }

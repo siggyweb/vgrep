@@ -21,7 +21,10 @@ jobs:
       with:
         go-version: '1.23'
 
-    - name: Install Dependencies
+    - name: Install System Dependencies
+      run: sudo apt-get update && sudo apt-get install -y libx11-dev
+
+    - name: Install Project Dependencies
       run: go get ./...
 
     - name: Build

@@ -12,7 +12,7 @@ import (
 )
 
 // ShellModel represents the dynamic layer above the terminal which handles the interaction with the system shell below
-// it implements the bubble tea application state model for terminal
+// it implements the bubble tea application state model for the user's terminal
 type ShellModel struct {
 	currentDirectory string
 	err              error
@@ -21,6 +21,7 @@ type ShellModel struct {
 	output           string // do I need a builder here?
 	height           int
 	width            int
+	debounceTag      int
 }
 
 // InitialModel creates the starting state for the event loop
@@ -55,8 +56,10 @@ func InitialModel(logger *log.Logger) ShellModel {
 }
 
 // Init kicks off the event loop
+//
+//goland:noinspection GoMixedReceiverTypes
 func (m ShellModel) Init() tea.Cmd {
-	return tea.Batch(tickEvery(), m.inputBuffer.Focus())
+	return m.inputBuffer.Focus()
 }
 
 // FetchWorkingDirectory Retrieves and formats the full path to the current working directory

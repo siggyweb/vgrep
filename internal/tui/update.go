@@ -10,57 +10,70 @@ import (
 	"time"
 )
 
-// Update handles the changes of state for the model
+const DebounceDuration = time.Second
+
+// Update handles core routing for messages flowing through the MVU pipeline
+//
+//goland:noinspection GoMixedReceiverTypes
 func (m ShellModel) Update(message tea.Msg) (tea.Model, tea.Cmd) {
-	msgType := reflect.TypeOf(message)
-	if msgType != reflect.TypeOf(TickMsg{}) {
-		m.logger.Debugf("handling message, type: %s , message: %+v", msgType, message)
-	}
+	m.logger.Debugf("handling message of type: %s,  message: %+v", reflect.TypeOf(message), message)
+	var messageCommand tea.Cmd
 
 	switch msg := message.(type) {
-
 	case tea.WindowSizeMsg:
-		m.height = msg.Height
-		m.width = msg.Width
-
+		m.HandleWindowSizeMsg(msg)
 	case tea.KeyMsg:
-		switch msg.String() {
-		case "ctrl+c":
-			return m, tea.Quit
-
-		case "ctrl+q":
-			clipboard.Write(clipboard.FmtText, []byte(m.output))
-		}
-
+		messageCommand = m.HandleKeyMessage(msg)
 	case TickMsg:
-		return m, tea.Batch(
-			m.CommandRunner(),
-			tickEvery(),
-		)
-
-	case CommandResponseMessage:
-		if msg.err == nil {
-			m.output = msg.result
-			m.err = nil
-		} else {
-			m.output = ""
-			m.err = msg.err
+		if int(msg) == m.debounceTag {
+			messageCommand = m.CommandRunner()
 		}
+	case CommandResponseMessage:
+		m.HandleCommandResponseMessage(msg)
 	}
 
-	// finally manage the state of the ti bubble via its own mvu event loop
-	var cmd tea.Cmd
-	m.inputBuffer, cmd = m.inputBuffer.Update(message)
+	// Manage the state of the ti bubble via its own mvu event loop
+	var inputBufferCmd tea.Cmd
+	m.inputBuffer, inputBufferCmd = m.inputBuffer.Update(message)
 	if len(m.inputBuffer.Value()) == 0 {
 		m.output = ""
 		m.err = nil
 	}
 
-	return m, cmd
+	return m, tea.Batch(messageCommand, inputBufferCmd)
+}
+
+func (m *ShellModel) HandleKeyMessage(msg tea.KeyMsg) tea.Cmd {
+	m.debounceTag++
+	switch msg.String() {
+	case "ctrl+c":
+		return tea.Quit
+
+	case "ctrl+q":
+		clipboard.Write(clipboard.FmtText, []byte(m.output))
+	}
+	return tea.Tick(DebounceDuration, func(_ time.Time) tea.Msg {
+		return TickMsg(m.debounceTag)
+	})
+}
+
+func (m *ShellModel) HandleCommandResponseMessage(msg CommandResponseMessage) {
+	if msg.err == nil {
+		m.output = msg.result
+		m.err = nil
+	} else {
+		m.output = ""
+		m.err = msg.err
+	}
+}
+
+func (m *ShellModel) HandleWindowSizeMsg(msg tea.WindowSizeMsg) {
+	m.height = msg.Height
+	m.width = msg.Width
 }
 
 // CommandCreator constructs terminal commands from users input with safety checks
-func (m ShellModel) CommandCreator() (*exec.Cmd, context.CancelFunc) {
+func (m *ShellModel) CommandCreator() (*exec.Cmd, context.CancelFunc) {
 	arguments := strings.Fields(m.inputBuffer.Value())
 	l := len(arguments)
 	if l == 0 {
@@ -95,15 +108,15 @@ func validateCommand(executable string) bool {
 	return false
 }
 
-// CommandRunner executes shell commands in a goroutine using tea Cmd capability and routes the results back into the event loop
-func (m ShellModel) CommandRunner() tea.Cmd {
+// CommandRunner executes shell commands as a tea.Cmd and routes the results back into the event loop
+//
+//goland:noinspection GoMixedReceiverTypes
+func (m *ShellModel) CommandRunner() tea.Cmd {
 	return func() tea.Msg {
 		command, cancel := m.CommandCreator()
-		// if command is invalid abandon here as we cannot call cancel()
 		if command == nil {
 			return nil
 		}
-		// else set up the command with cancellation token and execute
 		defer cancel()
 
 		output, err := command.Output()
@@ -119,11 +132,4 @@ func (m ShellModel) CommandRunner() tea.Cmd {
 			}
 		}
 	}
-}
-
-// tickEvery is the driver for the refresh rate of results in the view
-func tickEvery() tea.Cmd {
-	return tea.Every(time.Millisecond*500, func(t time.Time) tea.Msg {
-		return TickMsg(t)
-	})
 }

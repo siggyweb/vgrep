@@ -12,7 +12,7 @@ import (
 )
 
 // ShellModel represents the dynamic layer above the terminal which handles the interaction with the system shell below
-// it implements the bubble tea application state model for terminal
+// it implements the bubble tea application state model for the user's terminal
 type ShellModel struct {
 	currentDirectory string
 	err              error

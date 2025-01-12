@@ -108,15 +108,15 @@ func validateCommand(executable string) bool {
 	return false
 }
 
-// CommandRunner executes shell commands in a goroutine using tea Cmd capability and routes the results back into the event loop
+// CommandRunner executes shell commands as a tea.Cmd and routes the results back into the event loop
+//
+//goland:noinspection GoMixedReceiverTypes
 func (m *ShellModel) CommandRunner() tea.Cmd {
 	return func() tea.Msg {
 		command, cancel := m.CommandCreator()
-		// if command is invalid abandon here as we cannot call cancel()
 		if command == nil {
 			return nil
 		}
-		// else set up the command with cancellation token and execute
 		defer cancel()
 
 		output, err := command.Output()

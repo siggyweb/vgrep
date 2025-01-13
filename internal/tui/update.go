@@ -83,6 +83,7 @@ func (m *ShellModel) CommandCreator() (*exec.Cmd, context.CancelFunc) {
 	var command *exec.Cmd
 	valid := validateCommand(arguments[0])
 	if !valid {
+		m.stats.IncrementInvalidCommands()
 		return nil, nil
 	}
 
@@ -121,11 +122,13 @@ func (m *ShellModel) CommandRunner() tea.Cmd {
 
 		output, err := command.Output()
 		if err != nil {
+			m.stats.IncrementErrors()
 			return CommandResponseMessage{
 				result: "",
 				err:    err,
 			}
 		} else {
+			m.stats.IncrementCommandsRun()
 			return CommandResponseMessage{
 				result: string(output),
 				err:    nil,

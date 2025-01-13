@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/siggyweb/vgrep/internal/stats"
 	log "github.com/sirupsen/logrus"
 	"golang.design/x/clipboard"
 	"os"
@@ -22,10 +23,11 @@ type ShellModel struct {
 	height           int
 	width            int
 	debounceTag      int
+	stats            stats.StatCollector
 }
 
 // InitialModel creates the starting state for the event loop
-func InitialModel(logger *log.Logger) ShellModel {
+func InitialModel(logger *log.Logger, statsModel stats.StatCollector) ShellModel {
 	workingDirectory, err := FetchWorkingDirectory()
 	if err != nil {
 		fmt.Println("could not obtain current working directory, quitting")
@@ -43,12 +45,15 @@ func InitialModel(logger *log.Logger) ShellModel {
 		panic(err)
 	}
 
+	statsModel.Init()
+
 	model := ShellModel{
 		currentDirectory: workingDirectory,
 		output:           "",
 		inputBuffer:      ti,
 		err:              nil,
 		logger:           logger,
+		stats:            statsModel,
 	}
 	logger.Debugln("TUI state initialised")
 

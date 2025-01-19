@@ -24,6 +24,7 @@ type ShellModel struct {
 	width            int
 	debounceTag      int
 	stats            stats.StatCollector
+	history          HistoryModel
 }
 
 // InitialModel creates the starting state for the event loop
@@ -47,6 +48,11 @@ func InitialModel(logger *log.Logger, statsModel stats.StatCollector) ShellModel
 
 	statsModel.Init()
 
+	shellHistory := &History{
+		storedCommands: nil,
+		index:          0,
+	}
+
 	model := ShellModel{
 		currentDirectory: workingDirectory,
 		output:           "",
@@ -54,6 +60,7 @@ func InitialModel(logger *log.Logger, statsModel stats.StatCollector) ShellModel
 		err:              nil,
 		logger:           logger,
 		stats:            statsModel,
+		history:          shellHistory,
 	}
 	logger.Debugln("TUI state initialised")
 

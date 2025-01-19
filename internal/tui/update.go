@@ -48,10 +48,14 @@ func (m *ShellModel) HandleKeyMessage(msg tea.KeyMsg) tea.Cmd {
 	switch msg.String() {
 	case "ctrl+c":
 		return tea.Quit
-
 	case "ctrl+q":
 		clipboard.Write(clipboard.FmtText, []byte(m.output))
+	case "up":
+		m.inputBuffer.SetValue(m.history.GetPreviousCommand())
+	case "down":
+		m.inputBuffer.SetValue(m.history.GetNextCommand())
 	}
+
 	return tea.Tick(DebounceDuration, func(_ time.Time) tea.Msg {
 		return TickMsg(m.debounceTag)
 	})
@@ -120,6 +124,7 @@ func (m *ShellModel) CommandRunner() tea.Cmd {
 		}
 		defer cancel()
 
+		m.history.AddCommand(command.String())
 		output, err := command.Output()
 		if err != nil {
 			m.stats.IncrementErrors()

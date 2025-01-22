@@ -6,8 +6,9 @@ import (
 )
 
 // View creates the TUI representation
+//
+//goland:noinspection GoMixedReceiverTypes
 func (m ShellModel) View() string {
-	// todo wrap lines + apply styling
 	resultView := textStyle.Render(fmt.Sprintf("Result: %s", m.output))
 
 	errorView := fmt.Sprintf("Error: %s", func() string {

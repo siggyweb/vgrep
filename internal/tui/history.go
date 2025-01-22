@@ -24,6 +24,7 @@ func (h *History) GetPreviousCommand() string {
 		h.index--
 		return h.storedCommands[h.index]
 	}
+
 	return ""
 }
 
@@ -48,7 +49,13 @@ func (h *History) AddCommand(command string) {
 	if command == "" {
 		return
 	}
-	commandString, _ := strings.CutPrefix(command, "/bin/")
+
+	binaryPathElements := strings.Split(command, "/")
+	if len(binaryPathElements) == 0 {
+		return
+	}
+
+	commandString := binaryPathElements[len(binaryPathElements)-1]
 	h.storedCommands = append(h.storedCommands, commandString)
 	h.index = len(h.storedCommands) - 1
 }

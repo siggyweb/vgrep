@@ -16,15 +16,15 @@ import (
 // it implements the bubble tea application state model for the user's terminal
 type ShellModel struct {
 	currentDirectory string
+	debounceTag      int
 	err              error
+	height           int
+	history          HistoryModel
 	inputBuffer      textinput.Model
 	logger           *log.Logger
-	output           string // do I need a builder here?
-	height           int
-	width            int
-	debounceTag      int
+	output           string
 	stats            stats.StatCollector
-	history          HistoryModel
+	width            int
 }
 
 // InitialModel creates the starting state for the event loop
@@ -80,6 +80,7 @@ func FetchWorkingDirectory() (string, error) {
 	if err != nil {
 		return "", err
 	}
+
 	result := strings.TrimSpace(output)
 	return result, nil
 }

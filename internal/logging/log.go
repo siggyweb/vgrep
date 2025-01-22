@@ -6,10 +6,9 @@ import (
 	"path/filepath"
 )
 
-// ConfigureLogging sets up an instance of the logrus logger to be passed into the main model for writing logs to file.
+// ConfigureLogging sets up an instance of the logrus logger for dependency injection.
 // Logs are based around tea.Msg handling as these are the currency of the system and drive all behaviour.
-// TickMsg are ignored by logging as their existence is inferred by the presence of CommandResponseMessage which cannot
-// trigger without a tick
+// TickMsg are ignored by logging.
 func ConfigureLogging() (*log.Logger, func() error) {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {

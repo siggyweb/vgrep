@@ -20,6 +20,10 @@ type History struct {
 func (h *History) GetPreviousCommand() string {
 	if len(h.storedCommands) == 0 {
 		return ""
+	}
+
+	if h.index == 0 {
+		return h.storedCommands[0]
 	} else if h.index > 0 {
 		h.index--
 		return h.storedCommands[h.index]
@@ -34,8 +38,11 @@ func (h *History) GetNextCommand() string {
 	if len(h.storedCommands) == 0 {
 		return ""
 	}
-
-	if h.index < len(h.storedCommands)-1 {
+	numberOfCommands := len(h.storedCommands)
+	if h.index == numberOfCommands-1 {
+		h.index++
+		return ""
+	} else if h.index < numberOfCommands-1 {
 		h.index++
 		return h.storedCommands[h.index]
 	}

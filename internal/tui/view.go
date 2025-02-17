@@ -6,13 +6,13 @@ import "fmt"
 //
 //goland:noinspection GoMixedReceiverTypes
 func (m ShellModel) View() string {
-	view := fmt.Sprintf("Result: %s \n", m.output)
+	view := fmt.Sprintf("Result: %s \n", m.Output)
 	view += fmt.Sprintf("Error: %s \n", func() string {
-		if m.err != nil {
-			return m.err.Error()
+		if m.Err != nil {
+			return m.Err.Error()
 		}
 		return ""
 	}())
-	view += m.inputBuffer.View()
+	view += m.InputBuffer.View()
 	return view
 }

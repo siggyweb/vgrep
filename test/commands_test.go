@@ -2,6 +2,7 @@ package test
 
 import (
 	"github.com/charmbracelet/bubbles/textinput"
+	"github.com/siggyweb/vgrep/internal/stats"
 	"github.com/siggyweb/vgrep/internal/tui"
 	log "github.com/sirupsen/logrus/hooks/test"
 	"testing"
@@ -14,6 +15,8 @@ func TestCommandCreatorCreatesValidCommand(t *testing.T) {
 }
 
 func CreateTestModel() tui.ShellModel {
+	testLogger, _ := log.NewNullLogger()
+
 	var testModel = tui.ShellModel{
 		CurrentDirectory: "test/dir",
 		DebounceTag:      0,
@@ -21,9 +24,9 @@ func CreateTestModel() tui.ShellModel {
 		Height:           100,
 		History:          &tui.History{},
 		InputBuffer:      textinput.Model{},
-		Logger:           log.NewNullLogger(),
+		Logger:           testLogger,
 		Output:           "",
-		Stats:            nil,
+		Stats:            &stats.SessionStatsModel{},
 	}
 
 	return testModel

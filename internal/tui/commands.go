@@ -8,8 +8,8 @@ import (
 	"time"
 )
 
-// validateCommand provides a whitelist of commands which are safe to be run within the event loop
-func validateCommand(executable string) bool {
+// ValidateCommand provides a whitelist of commands which are safe to be run within the event loop
+func ValidateCommand(executable string) bool {
 	safeCommands := []string{"pwd", "ls", "grep", "find", "locate", "which", "awk"}
 	for _, cmd := range safeCommands {
 		if executable == cmd {
@@ -28,7 +28,7 @@ func (m *ShellModel) CommandCreator() (*exec.Cmd, context.CancelFunc) {
 	}
 
 	var command *exec.Cmd
-	valid := validateCommand(arguments[0])
+	valid := ValidateCommand(arguments[0])
 	if !valid {
 		m.Stats.IncrementInvalidCommands()
 		return nil, nil

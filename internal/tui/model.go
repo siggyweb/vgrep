@@ -31,7 +31,7 @@ type ShellModel struct {
 func InitialModel(logger *log.Logger, statsModel stats.StatCollector) ShellModel {
 	workingDirectory, err := FetchWorkingDirectory()
 	if err != nil {
-		fmt.Println("could not obtain current working directory, quitting")
+		fmt.Println("could not obtain current working directory, safely quitting.")
 		tea.Quit()
 	}
 	workingDirectory = filepath.Base(workingDirectory)

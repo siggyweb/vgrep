@@ -36,8 +36,6 @@ func InitialModel(logger *log.Logger, statsModel stats.StatCollector) ShellModel
 	}
 	workingDirectory = filepath.Base(workingDirectory)
 
-	ti := CreateInputBuffer(workingDirectory)
-
 	err = clipboard.Init()
 	if err != nil {
 		panic(err)
@@ -45,19 +43,14 @@ func InitialModel(logger *log.Logger, statsModel stats.StatCollector) ShellModel
 
 	statsModel.Init()
 
-	shellHistory := &History{
-		storedCommands: nil,
-		index:          0,
-	}
-
 	model := ShellModel{
 		CurrentDirectory: workingDirectory,
 		Output:           "",
-		InputBuffer:      ti,
+		InputBuffer:      CreateInputBuffer(workingDirectory),
 		Err:              nil,
 		Logger:           logger,
 		Stats:            statsModel,
-		History:          shellHistory,
+		History:          &History{},
 	}
 	logger.Debugln("TUI state initialised")
 

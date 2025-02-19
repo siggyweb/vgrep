@@ -15,31 +15,28 @@ import (
 // ShellModel represents the dynamic layer above the terminal which handles the interaction with the system shell below
 // it implements the bubble tea application state model for the user's terminal
 type ShellModel struct {
-	currentDirectory string
-	debounceTag      int
-	err              error
-	height           int
-	history          HistoryModel
-	inputBuffer      textinput.Model
-	logger           *log.Logger
-	output           string
-	stats            stats.StatCollector
-	width            int
+	CurrentDirectory string
+	DebounceTag      int
+	Err              error
+	Height           int
+	Width            int
+	History          HistoryModel
+	InputBuffer      textinput.Model
+	Logger           *log.Logger
+	Output           string
+	Stats            stats.StatCollector
 }
 
 // InitialModel creates the starting state for the event loop
 func InitialModel(logger *log.Logger, statsModel stats.StatCollector) ShellModel {
 	workingDirectory, err := FetchWorkingDirectory()
 	if err != nil {
-		fmt.Println("could not obtain current working directory, quitting")
+		fmt.Println("could not obtain current working directory, safely quitting.")
 		tea.Quit()
 	}
 	workingDirectory = filepath.Base(workingDirectory)
 
-	ti := textinput.New()
-	ti.Placeholder = "begin searching..."
-	ti.Prompt = workingDirectory + ">>"
-	ti.Focus()
+	ti := CreateInputBuffer(workingDirectory)
 
 	err = clipboard.Init()
 	if err != nil {
@@ -54,13 +51,13 @@ func InitialModel(logger *log.Logger, statsModel stats.StatCollector) ShellModel
 	}
 
 	model := ShellModel{
-		currentDirectory: workingDirectory,
-		output:           "",
-		inputBuffer:      ti,
-		err:              nil,
-		logger:           logger,
-		stats:            statsModel,
-		history:          shellHistory,
+		CurrentDirectory: workingDirectory,
+		Output:           "",
+		InputBuffer:      ti,
+		Err:              nil,
+		Logger:           logger,
+		Stats:            statsModel,
+		History:          shellHistory,
 	}
 	logger.Debugln("TUI state initialised")
 
@@ -71,7 +68,16 @@ func InitialModel(logger *log.Logger, statsModel stats.StatCollector) ShellModel
 //
 //goland:noinspection GoMixedReceiverTypes
 func (m ShellModel) Init() tea.Cmd {
-	return m.inputBuffer.Focus()
+	return m.InputBuffer.Focus()
+}
+
+func CreateInputBuffer(workingDir string) textinput.Model {
+	ti := textinput.New()
+	ti.Placeholder = "begin searching..."
+	ti.Prompt = workingDir + ">>"
+	ti.Focus()
+
+	return ti
 }
 
 // FetchWorkingDirectory Retrieves and formats the full path to the current working directory

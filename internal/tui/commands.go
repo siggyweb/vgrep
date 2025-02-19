@@ -8,8 +8,8 @@ import (
 	"time"
 )
 
-// validateCommand provides a whitelist of commands which are safe to be run within the event loop
-func validateCommand(executable string) bool {
+// ValidateCommand provides a whitelist of commands which are safe to be run within the event loop
+func ValidateCommand(executable string) bool {
 	safeCommands := []string{"pwd", "ls", "grep", "find", "locate", "which", "awk"}
 	for _, cmd := range safeCommands {
 		if executable == cmd {
@@ -21,16 +21,16 @@ func validateCommand(executable string) bool {
 
 // CommandCreator constructs terminal commands from users input with safety checks
 func (m *ShellModel) CommandCreator() (*exec.Cmd, context.CancelFunc) {
-	arguments := strings.Fields(m.inputBuffer.Value())
+	arguments := strings.Fields(m.InputBuffer.Value())
 	l := len(arguments)
 	if l == 0 {
 		return nil, nil
 	}
 
 	var command *exec.Cmd
-	valid := validateCommand(arguments[0])
+	valid := ValidateCommand(arguments[0])
 	if !valid {
-		m.stats.IncrementInvalidCommands()
+		m.Stats.IncrementInvalidCommands()
 		return nil, nil
 	}
 
@@ -56,16 +56,16 @@ func (m *ShellModel) CommandRunner() tea.Cmd {
 		}
 		defer cancel()
 
-		m.history.AddCommand(command.String())
+		m.History.AddCommand(command.String())
 		output, err := command.Output()
 		if err != nil {
-			m.stats.IncrementErrors()
+			m.Stats.IncrementErrors()
 			return CommandResponseMessage{
 				result: "",
 				err:    err,
 			}
 		} else {
-			m.stats.IncrementCommandsRun()
+			m.Stats.IncrementCommandsRun()
 			return CommandResponseMessage{
 				result: string(output),
 				err:    nil,

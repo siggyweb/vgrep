@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	fmt.Println("Welcome to vgrep! The dynamic terminal wrapper")
+	fmt.Println("launching dynamic terminal...")
 
 	logger, cleanUpLogger := logging.ConfigureLogging()
 	statsModel := &stats.SessionStatsModel{}

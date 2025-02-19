@@ -29,18 +29,12 @@ type ShellModel struct {
 
 // InitialModel creates the starting state for the event loop
 func InitialModel(logger *log.Logger, statsModel stats.StatCollector) ShellModel {
-	workingDirectory, err := FetchWorkingDirectory()
-	if err != nil {
-		fmt.Println("could not obtain current working directory, safely quitting.")
-		tea.Quit()
-	}
-	workingDirectory = filepath.Base(workingDirectory)
-
-	err = clipboard.Init()
+	err := clipboard.Init()
 	if err != nil {
 		panic(err)
 	}
 
+	workingDirectory := FetchWorkingDirectory()
 	statsModel.Init()
 
 	model := ShellModel{
@@ -74,12 +68,15 @@ func CreateInputBuffer(workingDir string) textinput.Model {
 }
 
 // FetchWorkingDirectory Retrieves and formats the full path to the current working directory
-func FetchWorkingDirectory() (string, error) {
-	output, err := os.Getwd()
+func FetchWorkingDirectory() string {
+	workingDirectory, err := os.Getwd()
 	if err != nil {
-		return "", err
+		fmt.Println("could not obtain current working directory, safely quitting.")
+		tea.Quit()
+		return ""
 	}
 
-	result := strings.TrimSpace(output)
-	return result, nil
+	workingDirectory = strings.TrimSpace(workingDirectory)
+	result := filepath.Base(workingDirectory)
+	return result
 }

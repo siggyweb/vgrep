@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-const DebounceDuration = time.Second
+const DebounceDuration = time.Millisecond * 500
 
 // Update handles core routing for messages flowing through the MVU pipeline
 //

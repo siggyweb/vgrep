@@ -41,6 +41,7 @@ func ConfigureLogging() InternalLogger {
 type InternalLogger interface {
 	CleanUp()
 	LogMessage(message tea.Msg, level log.Level)
+	Infof(format string, args ...interface{})
 }
 
 type MessageLogger struct {
@@ -55,6 +56,10 @@ func (l *MessageLogger) LogMessage(message tea.Msg, level log.Level) {
 		return
 	}
 	l.Logger.WithField("message_type", messageType).Logf(level, "contents: %v", message)
+}
+
+func (l MessageLogger) Infof(format string, args ...interface{}) {
+	l.Logger.Infof(format, args...)
 }
 
 func (l *MessageLogger) CleanUp() {

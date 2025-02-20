@@ -2,8 +2,8 @@ package tui
 
 import (
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/sirupsen/logrus"
 	"golang.design/x/clipboard"
-	"reflect"
 	"time"
 )
 
@@ -13,9 +13,10 @@ const DebounceDuration = time.Millisecond * 500
 //
 //goland:noinspection GoMixedReceiverTypes
 func (m ShellModel) Update(message tea.Msg) (tea.Model, tea.Cmd) {
-	m.Logger.Debugf("handling message of type: %s,  message: %+v", reflect.TypeOf(message), message)
-	var messageCommand tea.Cmd
+	//m.Logger.WithField("message_type", reflect.TypeOf(message).Name()).Infof("message contents: %+v", message)
+	m.Logger.LogMessage(message, logrus.InfoLevel)
 
+	var messageCommand tea.Cmd
 	switch msg := message.(type) {
 	case tea.WindowSizeMsg:
 		m.HandleWindowSizeMsg(msg)

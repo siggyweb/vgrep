@@ -27,7 +27,7 @@ func ConfigureLogging() InternalLogger {
 	baseLogger := log.New()
 	baseLogger.SetOutput(logFile)
 	baseLogger.SetLevel(log.DebugLevel)
-	baseLogger.SetReportCaller(true)
+	baseLogger.SetReportCaller(false)
 
 	appLogger := &MessageLogger{
 		Logger:     baseLogger,

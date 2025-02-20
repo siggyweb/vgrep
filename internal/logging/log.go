@@ -1,15 +1,18 @@
 package logging
 
 import (
+	tea "github.com/charmbracelet/bubbletea"
 	log "github.com/sirupsen/logrus"
 	"os"
 	"path/filepath"
+	"reflect"
+	"slices"
 )
 
 // ConfigureLogging sets up an instance of the logrus logger for dependency injection.
 // Logs are based around tea.Msg handling as these are the currency of the system and drive all behaviour.
 // TickMsg are ignored by logging.
-func ConfigureLogging() (*log.Logger, func() error) {
+func ConfigureLogging() InternalLogger {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		log.Fatal("could not retrieve home directory")
@@ -21,10 +24,39 @@ func ConfigureLogging() (*log.Logger, func() error) {
 		log.Fatal("Could not open log file.")
 	}
 
-	logger := log.New()
-	logger.SetOutput(logFile)
-	logger.SetLevel(log.DebugLevel)
-	log.SetReportCaller(true)
+	baseLogger := log.New()
+	baseLogger.SetOutput(logFile)
+	baseLogger.SetLevel(log.DebugLevel)
+	baseLogger.SetReportCaller(true)
 
-	return logger, logFile.Close
+	appLogger := &MessageLogger{
+		Logger:     baseLogger,
+		LogFile:    logFile,
+		FilterList: []string{"BlinkMsg"},
+	}
+
+	return appLogger
+}
+
+type InternalLogger interface {
+	CleanUp()
+	LogMessage(message tea.Msg, level log.Level)
+}
+
+type MessageLogger struct {
+	Logger     *log.Logger
+	LogFile    *os.File
+	FilterList []string
+}
+
+func (l *MessageLogger) LogMessage(message tea.Msg, level log.Level) {
+	messageType := reflect.TypeOf(message).Name()
+	if slices.Contains(l.FilterList, messageType) {
+		return
+	}
+	l.Logger.WithField("message_type", messageType).Logf(level, "contents: %v", message)
+}
+
+func (l *MessageLogger) CleanUp() {
+	_ = l.LogFile.Close()
 }

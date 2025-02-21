@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/siggyweb/vgrep/internal/logging"
 	"github.com/siggyweb/vgrep/internal/stats"
 	"github.com/siggyweb/vgrep/internal/tui"
 	log "github.com/sirupsen/logrus/hooks/test"
@@ -125,7 +126,12 @@ func TestCommandCreatorRejectsEmptyCommands(t *testing.T) {
 }
 
 func CreateTestModel(input string) tui.ShellModel {
-	testLogger, _ := log.NewNullLogger()
+	baseLogger, _ := log.NewNullLogger()
+	testLogger := logging.MessageLogger{
+		Logger:     baseLogger,
+		FilterList: []string{},
+		LogFile:    nil,
+	}
 
 	textInput := textinput.Model{
 		Prompt: "test/dir>>",
@@ -140,7 +146,7 @@ func CreateTestModel(input string) tui.ShellModel {
 		Width:            100,
 		History:          &tui.History{},
 		InputBuffer:      textInput,
-		Logger:           testLogger,
+		Logger:           &testLogger,
 		Output:           "",
 		Stats:            &stats.SessionStatsModel{},
 	}

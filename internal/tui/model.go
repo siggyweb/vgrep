@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/siggyweb/vgrep/internal/logging"
 	"github.com/siggyweb/vgrep/internal/stats"
-	log "github.com/sirupsen/logrus"
 	"golang.design/x/clipboard"
 	"os"
 	"path/filepath"
@@ -22,13 +22,13 @@ type ShellModel struct {
 	Width            int
 	History          HistoryModel
 	InputBuffer      textinput.Model
-	Logger           *log.Logger
+	Logger           logging.InternalLogger
 	Output           string
 	Stats            stats.StatCollector
 }
 
 // InitialModel creates the starting state for the event loop
-func InitialModel(logger *log.Logger, statsModel stats.StatCollector) ShellModel {
+func InitialModel(logger logging.InternalLogger, statsModel stats.StatCollector) ShellModel {
 	err := clipboard.Init()
 	if err != nil {
 		panic(err)
@@ -46,7 +46,7 @@ func InitialModel(logger *log.Logger, statsModel stats.StatCollector) ShellModel
 		Stats:            statsModel,
 		History:          &History{},
 	}
-	logger.Debugln("TUI state initialised")
+	logger.Infof("TUI state initialised")
 
 	return model
 }

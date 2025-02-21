@@ -12,12 +12,12 @@ import (
 func main() {
 	fmt.Println("launching dynamic terminal...")
 
-	logger, cleanUpLogger := logging.ConfigureLogging()
+	logger := logging.ConfigureLogging()
 	statsModel := &stats.SessionStatsModel{}
 
 	defer func() {
 		logger.Infof(statsModel.GetSummary())
-		_ = cleanUpLogger()
+		logger.CleanUp()
 	}()
 
 	program := tea.NewProgram(vgrep.InitialModel(logger, statsModel))

@@ -19,8 +19,8 @@ func ValidateCommand(executable string) bool {
 	return false
 }
 
-// CommandCreator constructs terminal commands from users input with safety checks
-func (m *ShellModel) CommandCreator() (*exec.Cmd, context.CancelFunc) {
+// CreateCommand constructs terminal commands from users input with safety checks
+func (m *ShellModel) CreateCommand() (*exec.Cmd, context.CancelFunc) {
 	arguments := strings.Fields(m.InputBuffer.Value())
 	l := len(arguments)
 	if l == 0 {
@@ -45,12 +45,12 @@ func (m *ShellModel) CommandCreator() (*exec.Cmd, context.CancelFunc) {
 	return command, cancel
 }
 
-// CommandRunner executes shell commands as a tea.Cmd and routes the results back into the event loop
+// RunCommand executes shell commands as a tea.Cmd and routes the results back into the event loop
 //
 //goland:noinspection GoMixedReceiverTypes
-func (m *ShellModel) CommandRunner() tea.Cmd {
+func (m *ShellModel) RunCommand() tea.Cmd {
 	return func() tea.Msg {
-		command, cancel := m.CommandCreator()
+		command, cancel := m.CreateCommand()
 		if command == nil {
 			return nil
 		}

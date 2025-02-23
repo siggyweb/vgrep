@@ -96,7 +96,7 @@ func TestCommandCreatorFormsCommands(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			model := CreateTestModel(test.inputText)
-			actual, cancel := model.CommandCreator()
+			actual, cancel := model.CreateCommand()
 			defer cancel()
 
 			if actual.Path != test.expected.Path {
@@ -118,7 +118,7 @@ func TestCommandCreatorRejectsEmptyCommands(t *testing.T) {
 	}
 	t.Run(input.name, func(t *testing.T) {
 		model := CreateTestModel(input.commandInput)
-		actualCommand, cancel := model.CommandCreator()
+		actualCommand, cancel := model.CreateCommand()
 
 		assert.Nil(t, actualCommand, "got %v but expected nil", actualCommand)
 		assert.Nil(t, cancel, "got %v but expected nil", cancel)

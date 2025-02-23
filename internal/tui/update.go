@@ -24,7 +24,7 @@ func (m ShellModel) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 		messageCommand = m.HandleKeyMessage(msg)
 	case TickMsg:
 		if int(msg) == m.DebounceTag {
-			messageCommand = m.CommandRunner()
+			messageCommand = m.RunCommand()
 		}
 	case CommandResponseMessage:
 		m.HandleCommandResponseMessage(msg)
